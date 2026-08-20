@@ -23,7 +23,9 @@ public sealed record GptMessage(
 /// </summary>
 public sealed class GptLocalClient : IAsyncDisposable
 {
-    private const string Package = "openai-oauth@latest";
+    private const string PackageName = "openai-oauth";
+    private const string PackageVersion = "2.0.0";
+    private const string Package = PackageName + "@" + PackageVersion;
     private const string LoopbackHost = "127.0.0.1";
     private const int DefaultPort = 10531;
 
@@ -396,7 +398,7 @@ public sealed class GptLocalClient : IAsyncDisposable
         => output.Contains("No OpenAI OAuth credentials", StringComparison.OrdinalIgnoreCase) ||
            output.Contains("No auth file", StringComparison.OrdinalIgnoreCase) ||
            output.Contains("ChatGPT access token not found", StringComparison.OrdinalIgnoreCase) ||
-           output.Contains("Run `npx openai-oauth login`", StringComparison.OrdinalIgnoreCase);
+           output.Contains($"Run `npx {PackageName} login`", StringComparison.OrdinalIgnoreCase);
 
     private static bool LooksLikeAlreadyRunning(string output)
         => output.Contains("already running", StringComparison.OrdinalIgnoreCase);
