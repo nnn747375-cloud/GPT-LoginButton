@@ -16,6 +16,6 @@ jobs:
         with:
           dotnet-version: 9.0.x
       - name: Build library
-        run: dotnet build src/GptLoginButton/GptLoginButton.csproj --configuration Release --no-restore
+        run: dotnet build src/GptLoginButton/GptLoginButton.csproj --configuration Release
       - name: Build demo
-        run: dotnet build examples/WinFormsDemo/WinFormsDemo.csproj --configuration Release --no-restore
+        run: dotnet build examples/WinFormsDemo/WinFormsDemo.csproj --configuration Release
