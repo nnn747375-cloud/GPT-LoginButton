@@ -330,6 +330,7 @@ internal sealed class DemoForm : Form
         try
         {
             var connection = await _client.ConnectAsync(_operation.Token);
+            _history.Clear();
             ApplyConnection(connection);
             _statusBar.Text = "Connected locally. Requests go through openai-oauth on 127.0.0.1.";
         }
@@ -356,6 +357,7 @@ internal sealed class DemoForm : Form
 
     private async Task DisconnectAsync()
     {
+        _history.Clear();
         try
         {
             await _client.DisconnectAsync();
@@ -379,28 +381,51 @@ internal sealed class DemoForm : Form
     private void ApplyConnection(GptConnection connection)
     {
         _modelSelector.Items.Clear();
-        foreach (var model in connection.Models)
+        foreach (var model in connection.Models
+                     .OrderBy(model => model.IsImage)
+                     .ThenBy(model => model.Id, StringComparer.OrdinalIgnoreCase))
         {
             _modelSelector.Items.Add(new ModelOption(model));
         }
 
         var options = _modelSelector.Items.OfType<ModelOption>().ToArray();
-        var defaultIndex = Array.FindIndex(options, option =>
-            !option.Model.IsImage && option.Model.Id.Contains("5.4-mini", StringComparison.OrdinalIgnoreCase));
-        _modelSelector.SelectedIndex = defaultIndex >= 0 ? defaultIndex : 0;
-        _modelSelector.Enabled = true;
-        _chatPanel.Enabled = true;
-        _composer.Enabled = true;
-        _sendButton.Enabled = true;
+        var preferred = options.FirstOrDefault(option =>
+            !option.Model.IsImage &&
+            (option.Model.Id.Contains("5.6-luna", StringComparison.OrdinalIgnoreCase) ||
+             option.Model.Id.Contains("5-6-luna", StringComparison.OrdinalIgnoreCase)));
+        preferred ??= options.FirstOrDefault(option => !option.Model.IsImage);
+
+        _modelSelector.SelectedItem = preferred;
+        if (preferred is null)
+        {
+            _modelSelector.SelectedIndex = -1;
+        }
+
+        _modelSelector.Enabled = options.Length > 0;
+        _chatPanel.Enabled = options.Length > 0;
+        _composer.Enabled = options.Length > 0;
+        _sendButton.Enabled = preferred is not null;
         _loginButton.SetConnected("ChatGPT");
         _connectionStatus.Text = $"Connected · {connection.Models.Count} account models loaded from the local proxy.";
-        UpdateModelStatus();
+        if (preferred is null)
+        {
+            _modelStatus.Text = options.Length == 0
+                ? "This account exposed no models."
+                : "No non-image chat model was exposed. Choose an image model explicitly if needed.";
+            _sendButton.Text = "Send  ↗";
+        }
+        else
+        {
+            UpdateModelStatus();
+        }
     }
 
     private void UpdateModelStatus()
     {
         if (_modelSelector.SelectedItem is not ModelOption option)
         {
+            _modelStatus.Text = "Select a model to continue.";
+            _sendButton.Enabled = false;
             return;
         }
 
@@ -408,6 +433,7 @@ internal sealed class DemoForm : Form
             ? $"Image model · prompt creates an image through {option.Model.Id}."
             : $"Chat model · real account request through {option.Model.Id}.";
         _sendButton.Text = option.Model.IsImage ? "Generate  ✦" : "Send  ↗";
+        _sendButton.Enabled = _chatPanel.Enabled;
     }
 
     private void ComposerKeyDown(object? sender, KeyEventArgs e)
