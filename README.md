@@ -39,11 +39,11 @@ dotnet run --project examples/WinFormsDemo/WinFormsDemo.csproj
 On the first connection the app runs:
 
 ```powershell
-npx --yes openai-oauth@latest login
-npx --yes openai-oauth@latest --host 127.0.0.1 --port 10531 --detach
+npx --yes openai-oauth@2.0.0 login
+npx --yes openai-oauth@2.0.0 --host 127.0.0.1 --port 10531 --detach
 ```
 
-The proxy is local at `http://127.0.0.1:10531/v1`. The app uses its account-aware
+This release pins `openai-oauth` to **2.0.0**. The proxy is local at `http://127.0.0.1:10531/v1`. The app uses its account-aware
 `/v1/models`, `/v1/chat/completions` and `/v1/images/generations` routes. The
 local auth session is managed by the CLI in the normal Codex auth location; this
 repository never reads or commits that file.
