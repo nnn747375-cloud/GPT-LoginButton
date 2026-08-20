@@ -1,0 +1,13 @@
+bin/
+obj/
+.vs/
+*.user
+*.suo
+*.pdb
+*.userosscache
+*.sln.docstates
+.env
+.env.*
+!.env.example
+*.log
+dist/
