@@ -6,6 +6,8 @@ ChatGPT Studio pairs a reusable WinForms login button with the official Codex CL
 
 Independent community project; not affiliated with or endorsed by OpenAI.
 
+![ChatGPT Studio desktop demo with account sidebar, conversation, tools and activity panel](docs/studio-preview.png)
+
 ## Start in one click
 
 Download a Windows build from [Releases](https://github.com/nnn747375-cloud/GPT-LoginButton/releases), or clone the source and double-click **`Start-Demo.cmd`**.

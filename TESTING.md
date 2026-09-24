@@ -26,4 +26,16 @@ Opt into live checks, which require an account and consume usage:
 dotnet run --project tests/ClientChecks --configuration Release -- --live
 ```
 
-The fresh browser OAuth consent flow was **not exercised** because the existing authenticated session was reused. These client checks do not establish visual UI quality or prove behavior on every Windows installation. No legacy-proxy image-generation result was verified by these checks. CI deliberately runs only the offline checks and builds.
+## Native demo verification
+
+The Windows Forms demo was also inspected and exercised directly:
+
+- Default 1120 x 800 client size and minimum 920 x 720 outer window size showed no overlaps or clipping in the inspected layouts.
+- An 8,109-character answer remained readable in the conversation layout.
+- Keyboard activation, accessibility behavior and invalid settings handling passed.
+- The actual form's `ConnectAsync` -> composer -> `SendAsync` path returned `UI_PIPELINE_OK` from ChatGPT in 5.4 seconds.
+- Busy, cancellation and ready-to-send states passed their UI checks.
+
+The README preview is a capture of this native demo. These results apply to the tested Windows environment and do not prove behavior on every display scale or Windows installation.
+
+The fresh browser OAuth consent flow was **not exercised** because the existing authenticated session was reused. No legacy-proxy image-generation result was verified by these checks. CI deliberately runs only the offline checks and builds.
