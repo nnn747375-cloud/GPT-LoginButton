@@ -1,4 +1,4 @@
-name: build
+name: build-and-check
 
 on:
   push:
@@ -19,3 +19,5 @@ jobs:
         run: dotnet build src/GptLoginButton/GptLoginButton.csproj --configuration Release
       - name: Build demo
         run: dotnet build examples/WinFormsDemo/WinFormsDemo.csproj --configuration Release
+      - name: Run offline client checks
+        run: dotnet run --project tests/ClientChecks --configuration Release
