@@ -72,7 +72,7 @@ public sealed class GptLoginButton : Control
 
     public void PerformLogin()
     {
-        if (_state != GptLoginState.SigningIn)
+        if (Enabled && !IsDisposed && _state != GptLoginState.SigningIn)
         {
             LoginRequested?.Invoke(this, EventArgs.Empty);
         }
@@ -80,7 +80,7 @@ public sealed class GptLoginButton : Control
 
     public void PerformLogout()
     {
-        if (_state == GptLoginState.Connected)
+        if (Enabled && !IsDisposed && _state == GptLoginState.Connected)
         {
             LogoutRequested?.Invoke(this, EventArgs.Empty);
         }
@@ -88,6 +88,11 @@ public sealed class GptLoginButton : Control
 
     protected override void OnClick(EventArgs e)
     {
+        if (!Enabled || IsDisposed)
+        {
+            return;
+        }
+
         base.OnClick(e);
         if (_state == GptLoginState.Connected)
         {
@@ -98,6 +103,12 @@ public sealed class GptLoginButton : Control
             PerformLogin();
         }
     }
+
+    protected override bool IsInputKey(Keys keyData)
+        => (keyData & Keys.KeyCode) is Keys.Enter or Keys.Space || base.IsInputKey(keyData);
+
+    protected override AccessibleObject CreateAccessibilityInstance()
+        => new LoginButtonAccessibleObject(this);
 
     protected override void OnKeyDown(KeyEventArgs e)
     {
@@ -146,8 +157,16 @@ public sealed class GptLoginButton : Control
 
     protected override void OnLostFocus(EventArgs e)
     {
+        _keyboardActivation = false;
         Invalidate();
         base.OnLostFocus(e);
+    }
+
+    protected override void OnEnabledChanged(EventArgs e)
+    {
+        _keyboardActivation = false;
+        Invalidate();
+        base.OnEnabledChanged(e);
     }
 
     protected override void OnPaint(PaintEventArgs e)
@@ -187,6 +206,11 @@ public sealed class GptLoginButton : Control
 
     private void SetState(GptLoginState state, string? accountLabel)
     {
+        if (IsDisposed || Disposing)
+        {
+            return;
+        }
+
         if (IsHandleCreated && InvokeRequired)
         {
             try
@@ -208,7 +232,7 @@ public sealed class GptLoginButton : Control
         AccessibleName = state switch
         {
             GptLoginState.SigningIn => "ChatGPT sign-in is in progress. Return here after completing the browser login.",
-            GptLoginState.Connected => "ChatGPT connected. Activate to disconnect the local proxy.",
+            GptLoginState.Connected => "ChatGPT connected. Activate to disconnect this app session.",
             GptLoginState.Error => "ChatGPT sign-in failed. Activate to try again.",
             _ => "Continue with ChatGPT. Opens secure sign-in in your browser.",
         };
@@ -230,6 +254,36 @@ public sealed class GptLoginButton : Control
         if (Enabled)
         {
             OnClick(EventArgs.Empty);
+        }
+    }
+
+    private sealed class LoginButtonAccessibleObject(GptLoginButton button) : ControlAccessibleObject(button)
+    {
+        public override string? DefaultAction
+            => button.State == GptLoginState.Connected ? "Disconnect" : "Sign in";
+
+        public override void DoDefaultAction()
+        {
+            if (button.IsDisposed || button.Disposing)
+            {
+                return;
+            }
+
+            if (button.IsHandleCreated && button.InvokeRequired)
+            {
+                try
+                {
+                    button.BeginInvoke(new Action(DoDefaultAction));
+                }
+                catch (InvalidOperationException)
+                {
+                    // The host may close while an accessibility action is queued.
+                }
+
+                return;
+            }
+
+            button.PerformClickFromKeyboard();
         }
     }
 
